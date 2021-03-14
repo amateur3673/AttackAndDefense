@@ -1,6 +1,6 @@
 # Adversarial samples: Attack and defend
 
-Research about adversarial samples is recently a hot topic in Machine Learning. In this repository, i just want to introduce some methods for generating adversarial samples and how to defend against them.
+Research about adversarial samples recently is a hot topic in Machine Learning. In this repository, i just want to introduce some methods for generating adversarial samples and how to defend against them.
 
 # There's still many interesting method, i will update later in the future.
 
