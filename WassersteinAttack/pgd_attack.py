@@ -48,9 +48,10 @@ class PGDAttack:
                 else:
                     raise ValueError("Only accept Linfinity and L2")
             X_ = X_.detach()
+            normX_ = torch.sum(X_,dim=[1,2,3]).view(X_.shape[0],1,1,1)
             # Project to Wasserstein ball
-            X_[~err] = (project_sinkhorn(X.clone()/normalization,X_/normalization,
-                                        self.C,self.epsilon,self.lambd,max_iter=self.sinkhorn_maxiters)*normalization)[~err]
+            X_[~err] = (project_sinkhorn(X.clone()/normalization,X_/normX_,
+                                        self.C,self.epsilon,self.lambd,max_iter=self.sinkhorn_maxiters)*normX_)[~err]
             X_ = torch.clamp(X_,0.,1.)
             preds = torch.argmax(self.model(X_),dim=1)
             err = preds!=y
@@ -111,7 +112,7 @@ if __name__ == '__main__':
     model.eval()
     dataset = MNIST(root='../data',train=False,transform=transforms.ToTensor())
     #dataloader = DataLoader(dataset,batch_size=2,shuffle=False)
-    img,target = dataset.__getitem__(4)
+    img,target = dataset.__getitem__(0)
     img = img.unsqueeze(0)
     target = torch.tensor([target])
     import matplotlib.pyplot as plt
