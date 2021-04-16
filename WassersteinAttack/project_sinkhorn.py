@@ -116,7 +116,7 @@ def lagrarian(alpha,beta,exp_alpha,exp_beta,X,Y,psi,K,lambd,epsilon):
         psi ([type]): [description]
         K ([type]): [description]
     """
-    return -0.5*dotmatrix(beta,beta)/lambd-psi*epsilon-dotmatrix(torch.clamp(alpha,max=1e10),X)-dotmatrix(torch.clamp(beta,max=1e10),Y)\
+    return -0.5*dotmatrix(beta,beta)/lambd-psi*epsilon+dotmatrix(torch.clamp(alpha,max=1e10),X)+dotmatrix(torch.clamp(beta,max=1e10),Y)\
            -dotmatrix(exp_alpha,conv(exp_beta,K))
 
 def wasserstein_kernel(p=2,kernel_size=7):
@@ -151,18 +151,18 @@ def project_sinkhorn(X,Y,C,epsilon,lambd,max_iter=50):
     m = X.shape[1]*X.shape[2]*X.shape[3]
     alpha = torch.log(torch.ones(size)/m)
     beta = torch.log(torch.ones(size)/m)
-    u = torch.exp(-alpha)
-    v = torch.exp(-beta)
+    u = torch.exp(alpha)
+    v = torch.exp(beta)
     psi = torch.ones(X.shape[0])
 
     K = torch.exp(-psi.view(-1,1,1,1)*C-1)
     old_lagrange = -float('inf')
     i = 0 # number of iteration
     while True:
-        alpha = -torch.log(X)+torch.log(conv(v,K))
-        u = torch.exp(-alpha)
-        beta = -lambd*Y + lamw(lambd*torch.exp(lambd*Y)*conv(u,K))
-        v = torch.exp(-beta)
+        alpha = torch.log(X)-torch.log(conv(v,K))
+        u = torch.exp(alpha)
+        beta = lambd*Y - lamw(lambd*torch.exp(lambd*Y)*conv(u,K))
+        v = torch.exp(beta)
 
         # Newton step
         g = -epsilon+dotmatrix(u,conv(v,K*C))
@@ -180,4 +180,4 @@ def project_sinkhorn(X,Y,C,epsilon,lambd,max_iter=50):
         if i>max_iter or torch.sum(torch.abs(lagrange-old_lagrange)<=1e-4):
             break
         old_lagrange = lagrange
-    return Y+beta/lambd
+    return Y-beta/lambd
